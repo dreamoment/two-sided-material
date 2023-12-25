@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang='ts'>
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import TwoSidedMaterial from '../package/index'
@@ -17,25 +17,36 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-camera.position.y += 10
+camera.position.z += 5
 
 
+let textureLoader = new THREE.TextureLoader()
+const textureFront = textureLoader.load('./images/red.png')
+const textureBack = textureLoader.load('./images/blue.png')
 
+const twoSidedMaterial = new TwoSidedMaterial(new THREE.MeshStandardMaterial())
+twoSidedMaterial.setTextureFront(textureFront)
+twoSidedMaterial.setTextureBack(textureBack)
+
+// or
+// twoSidedMaterial.setTextures(textureFront, textureBack)
+
+const material = twoSidedMaterial.getMaterial()
+const plane = new THREE.Mesh(new THREE.PlaneGeometry(), material)
+scene.add( plane )
 
 const animate = () => {
   controls.update()
   renderer.render(scene, camera)
 }
 
-const onWindowResize = () => {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-}
+})
 
 renderer.setAnimationLoop(animate)
-
-window.addEventListener('resize', onWindowResize)
 </script>
 
 <template>

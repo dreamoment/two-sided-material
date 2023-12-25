@@ -6,13 +6,15 @@
 
 ## two-sided-material 是什么 ?
 
-实现物体X光透视效果，就像存在平行世界一样。
+双面纹理材质。
+
+> 请确保`threejs`版本大于`r118`，否则会出现因`glsl`版本过低，导致着色器代码报错。
 
 ## 特性
 
 - 轻量易用
 
-- 依赖于`three.js`，不强制要求`three.js`版本
+- 基于`threejs`原生材质
 
 - 支持`typescript`
 
@@ -27,7 +29,7 @@ npm i @dreamoment/two-sided-material
 ```
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import ParaWorld from '../package/index'
+import TwoSidedMaterial from '@dreamoment/two-sided-material'
 
 
 const scene = new THREE.Scene()
@@ -43,71 +45,85 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-camera.position.y += 10
+camera.position.z += 5
 
 
-// edit scene
-const createWall = () => {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhysicalMaterial({ color: 0x00ff00 }))
-  return mesh
-}
-const _player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhysicalMaterial({ color: 0xff0000 }))
-const _wall1 = createWall()
-const _wall2 = createWall()
-const _wall3 = createWall()
-_wall1.position.set(0, 0, 3)
-_wall2.position.set(3, 0, 3)
-_wall3.position.set(6, 0, 3)
-scene.add(_player, _wall1, _wall2, _wall3)
+let textureLoader = new THREE.TextureLoader()
+const textureFront = textureLoader.load('./images/red.png')
+const textureBack = textureLoader.load('./images/blue.png')
 
-// enter para world
-ParaWorld.createTargetByMaterial(_player, new THREE.MeshPhysicalMaterial({ color: 0x0000ff }))
-ParaWorld.createCover(_wall1)
-ParaWorld.createCover(_wall2)
+const twoSidedMaterial = new TwoSidedMaterial(new THREE.MeshStandardMaterial())
+twoSidedMaterial.setTextureFront(textureFront)
+twoSidedMaterial.setTextureBack(textureBack)
+
+// or
+// twoSidedMaterial.setTextures(textureFront, textureBack)
+
+const material = twoSidedMaterial.getMaterial()
+const plane = new THREE.Mesh(new THREE.PlaneGeometry(), material)
+scene.add( plane )
 
 const animate = () => {
   controls.update()
   renderer.render(scene, camera)
 }
 
-const onWindowResize = () => {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-}
+})
 
 renderer.setAnimationLoop(animate)
-
-window.addEventListener('resize', onWindowResize)
 ```
 
 ## API
 
-### `static`renderOrder
-
-渲染顺序，用作计算基准。
-
-### `static`createTargetByMaterial
-
-传递统一材质，创建可变换物体，例如: 玩家。（适用于单一材质的简单模型）
-
 ```
-ParaWorld.createTargetByMaterial(target: THREE.Object3D, material: THREE.Material): THREE.Group
-```
+type MaterialEnabled = THREE.LineBasicMaterial |
+    THREE.MeshBasicMaterial |
+    THREE.MeshDepthMaterial |
+    THREE.MeshDistanceMaterial |
+    THREE.MeshLambertMaterial |
+    THREE.MeshMatcapMaterial |
+    THREE.MeshPhongMaterial |
+    THREE.MeshPhysicalMaterial |
+    THREE.MeshStandardMaterial |
+    THREE.MeshToonMaterial |
+    THREE.PointsMaterial |
+    THREE.SpriteMaterial
 
-### `static`createTargetByObject3D
-
-传递自定义物体，创建可变换物体，例如: 玩家。（适用于多材质的复杂模型）
-该自定义物体，是基于源物体的、不同新材质的克隆体。
-
-```
-ParaWorld.createTargetByMaterial(target: THREE.Object3D, clone: THREE.Object3D): THREE.Group
+new TwoSidedMaterial(material: MaterialEnabled)
 ```
 
-### `static`createCover
+### getMaterial
 
-创建遮挡物体，例如: 墙。
+获取 `threejs` 材质实例。
 
 ```
-ParaWorld.createCover(target: THREE.Object3D): THREE.Group
+getMaterial(): MaterialEnabled
+```
+
+### setTextureFront
+
+设置材质正面的纹理。
+
+```
+setTextureFront(texture: THREE.Texture): void
+```
+
+### setTextureBack
+
+设置材质反面的纹理。
+
+```
+setTextureBack(texture: THREE.Texture): void
+```
+
+### setTextures
+
+设置材质正面、反面的纹理。
+
+```
+setTextures(textureFront: THREE.Texture, textureBack: THREE.Texture): void
 ```

@@ -6,15 +6,17 @@ Language: English | [中文简体](README_zh_cn.md)
 
 ## What is two-sided-material ?
 
-Achieve the X-ray effect of objects as if there were parallel worlds.
+Two-sided texture material.
+
+> Make sure that the version of `threejs` is greater than `r118`, otherwise the shader code will error because the version of `glsl` is too low.
 
 ## Features
 
-- Lightweight and easy to use
+- lightweight and easy to use
 
-- It relies on `three.js` and does not mandate the `three.js` version
+- based on `threejs` native material
 
-- support`typescript`
+- support `typescript`
 
 ## Install
 
@@ -27,7 +29,7 @@ npm i @dreamoment/two-sided-material
 ```
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import ParaWorld from '../package/index'
+import TwoSidedMaterial from '@dreamoment/two-sided-material'
 
 
 const scene = new THREE.Scene()
@@ -43,70 +45,85 @@ document.body.appendChild(renderer.domElement)
 
 const controls = new OrbitControls(camera, renderer.domElement)
 
-camera.position.y += 10
+camera.position.z += 5
 
 
-// edit scene
-const createWall = () => {
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(2, 2, 2), new THREE.MeshPhysicalMaterial({ color: 0x00ff00 }))
-  return mesh
-}
-const _player = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshPhysicalMaterial({ color: 0xff0000 }))
-const _wall1 = createWall()
-const _wall2 = createWall()
-const _wall3 = createWall()
-_wall1.position.set(0, 0, 3)
-_wall2.position.set(3, 0, 3)
-_wall3.position.set(6, 0, 3)
-scene.add(_player, _wall1, _wall2, _wall3)
+let textureLoader = new THREE.TextureLoader()
+const textureFront = textureLoader.load('./images/red.png')
+const textureBack = textureLoader.load('./images/blue.png')
 
-// enter para world
-ParaWorld.createTargetByMaterial(_player, new THREE.MeshPhysicalMaterial({ color: 0x0000ff }))
-ParaWorld.createCover(_wall1)
-ParaWorld.createCover(_wall2)
+const twoSidedMaterial = new TwoSidedMaterial(new THREE.MeshStandardMaterial())
+twoSidedMaterial.setTextureFront(textureFront)
+twoSidedMaterial.setTextureBack(textureBack)
+
+// or
+// twoSidedMaterial.setTextures(textureFront, textureBack)
+
+const material = twoSidedMaterial.getMaterial()
+const plane = new THREE.Mesh(new THREE.PlaneGeometry(), material)
+scene.add( plane )
 
 const animate = () => {
   controls.update()
   renderer.render(scene, camera)
 }
 
-const onWindowResize = () => {
+window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight
   camera.updateProjectionMatrix()
   renderer.setSize(window.innerWidth, window.innerHeight)
-}
+})
 
 renderer.setAnimationLoop(animate)
-
-window.addEventListener('resize', onWindowResize)
 ```
 
 ## API
 
-### `static`renderOrder
-
-Render order, used as a base for calculation。
-
-### `static`createTargetByMaterial
-
-Pass uniform materials to create transformable objects, such as players. (For simple models of a single material)
-
 ```
-ParaWorld.createTargetByMaterial(target: THREE.Object3D, material: THREE.Material): THREE.Group
-```
+type MaterialEnabled = THREE.LineBasicMaterial |
+    THREE.MeshBasicMaterial |
+    THREE.MeshDepthMaterial |
+    THREE.MeshDistanceMaterial |
+    THREE.MeshLambertMaterial |
+    THREE.MeshMatcapMaterial |
+    THREE.MeshPhongMaterial |
+    THREE.MeshPhysicalMaterial |
+    THREE.MeshStandardMaterial |
+    THREE.MeshToonMaterial |
+    THREE.PointsMaterial |
+    THREE.SpriteMaterial
 
-### `static`createTargetByObject3D
-
-Pass custom objects and create transformable objects, such as players. (For complex models with multiple materials) This custom object is a clone of a different new material based on the source object.
-
-```
-ParaWorld.createTargetByMaterial(target: THREE.Object3D, clone: THREE.Object3D): THREE.Group
+new TwoSidedMaterial(material: MaterialEnabled)
 ```
 
-### `static`createCover
+### getMaterial
 
-Create an occluding object, such as a wall.
+Gets the `threejs` material instance.
 
 ```
-ParaWorld.createCover(target: THREE.Object3D): THREE.Group
+getMaterial(): MaterialEnabled
+```
+
+### setTextureFront
+
+Set the texture for the front of the material.
+
+```
+setTextureFront(texture: THREE.Texture): void
+```
+
+### setTextureBack
+
+Set the texture on the opposite side of the material.
+
+```
+setTextureBack(texture: THREE.Texture): void
+```
+
+### setTextures
+
+Set the textures for the front and back of the material.
+
+```
+setTextures(textureFront: THREE.Texture, textureBack: THREE.Texture): void
 ```
