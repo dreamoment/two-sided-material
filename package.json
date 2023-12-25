@@ -27,7 +27,6 @@
     "vue-tsc": "^1.8.25"
   },
   "dependencies": {
-    "@dreamoment/two-sided-material": "^0.0.1",
     "normalize.css": "^8.0.1",
     "three": "^0.159.0"
   }

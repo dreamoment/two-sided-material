@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import TwoSidedMaterial from '@dreamoment/two-sided-material'
+import TwoSidedMaterial from '../package/index'
 
 
 const scene = new THREE.Scene()
